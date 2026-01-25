@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidBank Ultimate - Full Features</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --k-green: #1a9d5e; --k-dark: #11693e; --k-blue: #1a73e8; --k-red: #ea4335; --k-gold: #d4af37; --k-light-gold: #f1e5ac; }
+        body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .app-container { width: 350px; height: 640px; background: white; border-radius: 40px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.15); overflow: hidden; }
+        
+        /* Popup Notification */
+        #toast { position: absolute; top: -200px; left: 5%; width: 90%; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); z-index: 1000; transition: 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-left: 8px solid var(--k-blue); box-sizing: border-box; }
+        #toast.show { top: 25px; }
+        .btn-pay { background: var(--k-green); color: white; border: none; padding: 10px; border-radius: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-family: 'Kanit'; font-weight: 500; }
+
+        /* Header Styles */
+        .main-header { background: linear-gradient(180deg, var(--k-green) 0%, var(--k-dark) 100%); height: 210px; padding: 35px 20px; color: white; text-align: center; border-radius: 0 0 30px 30px; transition: 0.5s; }
+        .main-header.admin-style { background: linear-gradient(180deg, #2c3e50 0%, #000 100%) !important; }
+        .main-header.banned { background: linear-gradient(180deg, var(--k-red) 0%, #7b0000 100%) !important; }
+        .gold-text { color: var(--k-light-gold); text-shadow: 0 2px 8px rgba(212, 175, 55, 0.4); }
+
+        /* Action Grid */
+        .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 20px; margin-top: -30px; }
+        .action-btn { background: white; height: 80px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08); cursor: pointer; border: none; font-size: 0.65rem; transition: 0.2s; }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn span:first-child { font-size: 1.5rem; margin-bottom: 5px; }
+
+        /* Overlays */
+        .overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+        input { width: 85%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-family: 'Kanit'; text-align: center; font-size: 1rem; }
+        .btn-primary { background: var(--k-green); color: white; border: none; padding: 12px; border-radius: 12px; width: 85%; font-size: 1rem; cursor: pointer; margin-top: 10px; font-weight: 500; }
+        
+        /* Signal Ripple Animation */
+        .signal-container { position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+        .ripple { position: absolute; width: 50px; height: 50px; background: var(--k-green); border-radius: 50%; opacity: 0; animation: ripple-effect 3s infinite; }
+        @keyframes ripple-effect { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(4); opacity: 0; } }
+
+        /* Radar Scan Animation */
+        .radar-line { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--k-blue); animation: radar-pulse 2s infinite linear; }
+        @keyframes radar-pulse { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+
+        .history-list { width: 100%; max-height: 350px; overflow-y: auto; padding: 10px; }
+        .history-item { background: #f8f9fa; padding: 12px; border-radius: 15px; margin-bottom: 10px; font-size: 0.8rem; border-left: 5px solid var(--k-blue); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="toast">
+        <div id="toast-title" style="font-weight: 500; color: var(--k-blue);">แจ้งเตือน</div>
+        <div id="toast-body" style="font-size: 0.85rem; margin-top: 5px;"></div>
+        <div id="payAction" style="display:none;">
+            <button class="btn-pay" id="btnConfirmPay">จ่ายเงินทันที</button>
+        </div>
+    </div>
+
+    <div id="loginOverlay" style="position:absolute; width:100%; height:100%; background:white; z-index:500; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="font-size: 4rem;">🏦</div>
+        <h2 style="color:var(--k-dark)">KidBank Mobile</h2>
+        <input type="number" id="accInput" placeholder="เลขบัญชี">
+        <button class="btn-primary" onclick="login()">เข้าสู่ระบบ</button>
+    </div>
+
+    <div id="mainScreen" style="display:none;">
+        <div class="main-header" id="headerBg">
+            <div id="accNameDisp" style="opacity:0.8; font-size:0.85rem;">บัญชี</div>
+            <div style="font-size: 2.5rem; font-weight: 500;" id="balDisp">0</div>
+            <div id="bannedLabel" style="display:none; font-weight:bold; animation: flash 1s infinite;">ถูกระงับการใช้งาน</div>
+            <div style="opacity:0.7; font-size:0.8rem;">THB</div>
+        </div>
+        
+        <div class="action-grid">
+            <div class="action-btn" onclick="openOverlay('transferChoiceOverlay')"><span>💸</span>โอนเงิน</div>
+            <div class="action-btn" onclick="openOverlay('receiveOverlay')"><span>📥</span>รับเงิน</div>
+            <div class="action-btn" onclick="openOverlay('historyOverlay'); loadHistory();"><span>📜</span>ประวัติ</div>
+            <div class="action-btn" onclick="openOverlay('billOverlay')"><span>🧾</span>เรียกเก็บ</div>
+            <div id="adminBtn" class="action-btn" style="display:none; border: 1px solid var(--k-gold);" onclick="openOverlay('adminAuthOverlay')"><span>⚙️</span>จัดการ</div>
+        </div>
+    </div>
+
+    <div id="transferChoiceOverlay" class="overlay">
+        <h3>วิธีโอนเงิน</h3>
+        <button class="btn-primary" style="background:var(--k-blue);" onclick="startSearch()">🔍 สแกนหาอุปกรณ์</button>
+        <button class="btn-primary" style="background:#444;" onclick="openOverlay('manualOverlay')">⌨️ ระบุเลขบัญชีเอง</button>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
+    </div>
+
+    <div id="scanOverlay" class="overlay">
+        <div class="radar-line"></div>
+        <h3 style="color:var(--k-blue); margin-top:20px;">กำลังสแกนหาผู้รับ...</h3>
+        <div id="foundList" style="width:100%;"></div>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
+    </div>
+
+    <div id="receiveOverlay" class="overlay">
+        <div class="signal-container">
+            <div class="ripple"></div><div class="ripple" style="animation-delay:1s"></div><div class="ripple" style="animation-delay:2s"></div>
+            <div style="font-size:60px; z-index:10;">📱</div>
+        </div>
+        <h3 style="color:var(--k-green);">กำลังเปิดสัญญาณรับเงิน</h3>
+        <p style="font-size:0.8rem; color:#666;">เครื่องอื่นจะเห็นคุณในรัศมีสแกน</p>
+        <button class="btn-primary" onclick="closeOverlays()">ปิดหน้ารับเงิน</button>
+    </div>
+
+    <div id="billOverlay" class="overlay">
+        <h3>เรียกเก็บเงิน</h3>
+        <input type="number" id="billAcc" placeholder="เลขบัญชีที่จะเรียกเก็บ">
+        <input type="number" id="billAmt" placeholder="จำนวนเงิน">
+        <button class="btn-primary" style="background:var(--k-blue);" onclick="sendBill()">ส่งคำขอเรียกเก็บ</button>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
+    </div>
+
+    <div id="historyOverlay" class="overlay" style="justify-content:flex-start; padding-top:40px;">
+        <h3>ประวัติการทำรายการ</h3>
+        <div id="hList" class="history-list"></div>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ปิด</button>
+    </div>
+
+    <div id="adminAuthOverlay" class="overlay">
+        <h3>สิทธิ์แอดมิน</h3>
+        <input type="password" id="adminPass" placeholder="รหัสลับ">
+        <button class="btn-primary" onclick="if(document.getElementById('adminPass').value==='011010') openOverlay('magicOverlay')">ตกลง</button>
+    </div>
+
+    <div id="magicOverlay" class="overlay">
+        <h3>✨ ระบบจัดการแอดมิน</h3>
+        <input type="number" id="mTarget" placeholder="เลขบัญชีเป้าหมาย">
+        <input type="number" id="mAmt" placeholder="จำนวนเงิน">
+        <div style="width:85%; display:flex; gap:10px;">
+            <button class="btn-primary" style="flex:1;" onclick="processMagic('add')">เสกเงิน</button>
+            <button class="btn-primary" style="flex:1; background:var(--k-red);" onclick="processMagic('reset')">รีเซ็ตเงิน</button>
+        </div>
+        <hr style="width:85%; margin:15px 0; opacity:0.1;">
+        <button class="btn-primary" style="background:#444;" onclick="toggleBan('1233', true)">🔴 ระงับน้อง (1233)</button>
+        <button class="btn-primary" style="background:var(--k-blue);" onclick="toggleBan('1233', false)">🟢 ปลดระงับน้อง (1233)</button>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">กลับ</button>
+    </div>
+
+    <div id="manualOverlay" class="overlay">
+        <h3>โอนเงิน</h3>
+        <input type="number" id="toAcc" placeholder="เลขบัญชีผู้รับ">
+        <input type="number" id="toAmt" placeholder="0.00">
+        <button class="btn-primary" onclick="transfer(document.getElementById('toAcc').value, document.getElementById('toAmt').value)">ยืนยันการโอน</button>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBofiWDW36lE8jmYeVFdIyNkBW7uYJ67YY",
+        authDomain: "sim-bank-b0e8c.firebaseapp.com",
+        databaseURL: "https://sim-bank-b0e8c-default-rtdb.firebaseio.com/",
+        projectId: "sim-bank-b0e8c",
+        storageBucket: "sim-bank-b0e8c.firebasestorage.app",
+        messagingSenderId: "388914681138",
+        appId: "1:388914681138:web:6b056cfee50fc585b6332b"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let myAcc = "";
+    let isBanned = false;
+
+    function login() {
+        const input = document.getElementById('accInput').value;
+        if(input === "1233" || input === "1234") {
+            myAcc = input;
+            document.getElementById('loginOverlay').style.display = "none";
+            document.getElementById('mainScreen').style.display = "block";
+            
+            if(myAcc === "1234") {
+                document.getElementById('adminBtn').style.display = "flex";
+                document.getElementById('headerBg').classList.add('admin-style');
+                document.getElementById('accNameDisp').innerText = "Altimate Black cards";
+                document.getElementById('balDisp').classList.add('gold-text');
+            } else {
+                document.getElementById('accNameDisp').innerText = "บัญชี " + myAcc;
+            }
+            
+            db.ref('users/'+myAcc+'/balance').once('value', s => {
+                if(s.val() === null) db.ref('users/'+myAcc).update({balance: 0, isBanned: false, isReady: false});
+            });
+            syncData();
+        }
+    }
+
+    function syncData() {
+        db.ref('users/'+myAcc).on('value', s => {
+            const d = s.val() || {};
+            isBanned = d.isBanned || false;
+            document.getElementById('balDisp').innerText = (d.balance || 0).toLocaleString();
+            document.getElementById('headerBg').classList.toggle('banned', isBanned);
+            document.getElementById('bannedLabel').style.display = isBanned ? 'block' : 'none';
+        });
+
+        db.ref('logs').limitToLast(1).on('child_added', snap => {
+            const log = snap.val();
+            if(log.to === myAcc && log.time > Date.now() - 5000) {
+                if(log.type === 'bill') {
+                    showToast(`ได้รับคำขอเรียกเก็บเงินจาก: ${log.from}<br>โอนให้: ${log.to}<br>จำนวน: <b>${log.amount} บาท</b>`, true, log);
+                } else {
+                    showToast(`ได้รับเงินจาก: ${log.from}<br>โอนให้: ${log.to}<br>จำนวน: <b>${log.amount} บาท</b>`, false);
+                }
+            }
+        });
+    }
+
+    function startSearch() {
+        openOverlay('scanOverlay');
+        const target = (myAcc === "1233") ? "1234" : "1233";
+        db.ref('users/' + target + '/isReady').on('value', (snap) => {
+            const list = document.getElementById('foundList');
+            if (snap.val() === true) {
+                list.innerHTML = `<div class="btn-primary" style="margin-top:20px; text-align:center;" onclick="prepareTransfer('${target}')">พบอุปกรณ์ (${target})</div>`;
+            } else {
+                list.innerHTML = `<p style="text-align:center; color:#999; margin-top:20px;">กำลังค้นหาสัญญาณ...</p>`;
+            }
+        });
+    }
+
+    function prepareTransfer(target) {
+        document.getElementById('toAcc').value = target;
+        openOverlay('manualOverlay');
+    }
+
+    function sendBill() {
+        const target = document.getElementById('billAcc').value;
+        const amt = parseFloat(document.getElementById('billAmt').value);
+        if(target && amt > 0) {
+            db.ref('logs').push({ from: myAcc, to: target, amount: amt, time: Date.now(), type: 'bill' });
+            alert("ส่งคำขอแล้ว");
+            closeOverlays();
+        }
+    }
+
+    async function transfer(to, amt) {
+        amt = parseFloat(amt);
+        if(isBanned) return alert("คุณถูกแบน!");
+        const s = await db.ref('users/'+myAcc+'/balance').once('value');
+        const myBal = s.val() || 0;
+        if(myBal >= amt) {
+            db.ref('users/'+myAcc+'/balance').set(myBal - amt);
+            db.ref('users/'+to+'/balance').transaction(c => (c || 0) + amt);
+            db.ref('logs').push({ from: myAcc, to: to, amount: amt, time: Date.now(), type: 'transfer' });
+            closeOverlays();
+        } else { alert("เงินไม่พอ!"); }
+    }
+
+    function processMagic(mode) {
+        const t = document.getElementById('mTarget').value;
+        const a = parseFloat(document.getElementById('mAmt').value);
+        if(mode === 'add') db.ref('users/'+t+'/balance').transaction(c => (c || 0) + a);
+        else db.ref('users/'+t+'/balance').set(0);
+        alert("ดำเนินการสำเร็จ");
+    }
+
+    function toggleBan(t, s) { db.ref('users/'+t+'/isBanned').set(s); }
+
+    function openOverlay(id) {
+        closeOverlays();
+        document.getElementById(id).style.display = 'flex';
+        if(id === 'receiveOverlay') db.ref('users/'+myAcc+'/isReady').set(true);
+    }
+
+    function closeOverlays() {
+        document.querySelectorAll('.overlay').forEach(e => e.style.display = 'none');
+        if(myAcc) db.ref('users/'+myAcc+'/isReady').set(false);
+    }
+
+    function showToast(msg, isBill, logData) {
+        const t = document.getElementById('toast');
+        const b = document.getElementById('toast-body');
+        const p = document.getElementById('payAction');
+        b.innerHTML = msg;
+        if(isBill) {
+            p.style.display = 'block';
+            document.getElementById('btnConfirmPay').onclick = () => { transfer(logData.from, logData.amount); t.classList.remove('show'); };
+        } else { p.style.display = 'none'; }
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 8000);
+    }
+
+    function loadHistory() {
+        const l = document.getElementById('hList');
+        l.innerHTML = "กำลังโหลด...";
+        db.ref('logs').limitToLast(10).once('value', s => {
+            l.innerHTML = "";
+            const data = s.val();
+            if(!data) return l.innerHTML = "ไม่มีประวัติ";
+            Object.values(data).reverse().forEach(v => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `[${v.type === 'bill' ? 'เรียกเก็บ' : 'โอน'}] จาก: ${v.from} ➡️ ถึง: ${v.to}<br><b>จำนวน: ${v.amount} บาท</b>`;
+                l.appendChild(item);
+            });
+        });
+    }
+</script>
+</body>
+</html>
