@@ -12,20 +12,24 @@
         body { font-family: 'Kanit', sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .app-container { width: 350px; height: 640px; background: white; border-radius: 40px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.15); overflow: hidden; }
         
+        /* Popup Notification */
         #toast { position: absolute; top: -200px; left: 5%; width: 90%; background: white; border-radius: 25px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); z-index: 1000; transition: 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-left: 8px solid var(--k-blue); box-sizing: border-box; }
         #toast.show { top: 25px; }
         .btn-pay { background: var(--k-green); color: white; border: none; padding: 10px; border-radius: 12px; margin-top: 10px; cursor: pointer; width: 100%; font-family: 'Kanit'; font-weight: 500; }
 
+        /* Header Styles */
         .main-header { background: linear-gradient(180deg, var(--k-green) 0%, var(--k-dark) 100%); height: 210px; padding: 35px 20px; color: white; text-align: center; border-radius: 0 0 30px 30px; transition: 0.5s; }
         .main-header.admin-style { background: linear-gradient(180deg, #2c3e50 0%, #000 100%) !important; }
         .main-header.banned { background: linear-gradient(180deg, var(--k-red) 0%, #7b0000 100%) !important; }
         .gold-text { color: var(--k-light-gold); text-shadow: 0 2px 8px rgba(212, 175, 55, 0.4); }
 
+        /* Action Grid */
         .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 20px; margin-top: -30px; }
         .action-btn { background: white; height: 80px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.08); cursor: pointer; border: none; font-size: 0.65rem; transition: 0.2s; }
         .action-btn:active { transform: scale(0.95); }
         .action-btn span:first-child { font-size: 1.5rem; margin-bottom: 5px; }
 
+        /* Overlays */
         .overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.98); z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
         input { width: 85%; padding: 12px; margin: 8px 0; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-family: 'Kanit'; text-align: center; font-size: 1rem; }
         .btn-primary { background: var(--k-green); color: white; border: none; padding: 12px; border-radius: 12px; width: 85%; font-size: 1rem; cursor: pointer; margin-top: 10px; font-weight: 500; }
@@ -48,7 +52,7 @@
         <div id="toast-title" style="font-weight: 500; color: var(--k-blue);">แจ้งเตือน</div>
         <div id="toast-body" style="font-size: 0.85rem; margin-top: 5px;"></div>
         <div id="payAction" style="display:none;">
-            <button class="btn-pay" id="btnConfirmPay">จ่ายเงินทันที</button>
+            <button class="btn-pay" id="btnConfirmPay">ยืนยัน</button>
         </div>
     </div>
 
@@ -72,6 +76,7 @@
             <div class="action-btn" onclick="openOverlay('receiveOverlay')"><span>📥</span>รับเงิน</div>
             <div class="action-btn" onclick="openOverlay('historyOverlay'); loadHistory();"><span>📜</span>ประวัติ</div>
             <div class="action-btn" onclick="openOverlay('billOverlay')"><span>🧾</span>เรียกเก็บ</div>
+            <div class="action-btn" onclick="openWorkOverlay()"><span>🧑🏻‍🔧</span>ทำงาน</div>
             <div id="adminBtn" class="action-btn" style="display:none; border: 1px solid var(--k-gold);" onclick="window.adminTask='manage'; openOverlay('adminAuthOverlay')"><span>⚙️</span>จัดการ</div>
             <div id="addAccBtn" class="action-btn" style="display:none; border: 1px solid var(--k-blue);" onclick="window.adminTask='create'; openOverlay('adminAuthOverlay')"><span>➕</span>เพิ่มบัญชี</div>
         </div>
@@ -84,35 +89,29 @@
         <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
     </div>
 
-    <div id="scanOverlay" class="overlay">
-        <div class="radar-line"></div>
-        <h3 style="color:var(--k-blue); margin-top:20px;">กำลังสแกนหาผู้รับ...</h3>
-        <div id="foundList" style="width:100%;"></div>
-        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
-    </div>
-
     <div id="receiveOverlay" class="overlay">
         <div class="signal-container">
             <div class="ripple"></div><div class="ripple" style="animation-delay:1s"></div><div class="ripple" style="animation-delay:2s"></div>
             <div style="font-size:60px; z-index:10;">📱</div>
         </div>
         <h3 style="color:var(--k-green);">กำลังเปิดสัญญาณรับเงิน</h3>
-        <p style="font-size:0.8rem; color:#666;">เครื่องอื่นจะเห็นคุณในรัศมีสแกน</p>
         <button class="btn-primary" onclick="closeOverlays()">ปิดหน้ารับเงิน</button>
     </div>
 
-    <div id="billOverlay" class="overlay">
-        <h3>เรียกเก็บเงิน</h3>
-        <input type="number" id="billAcc" placeholder="เลขบัญชีที่จะเรียกเก็บ">
-        <input type="number" id="billAmt" placeholder="จำนวนเงิน">
-        <button class="btn-primary" style="background:var(--k-blue);" onclick="sendBill()">ส่งคำขอเรียกเก็บ</button>
-        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
-    </div>
-
-    <div id="historyOverlay" class="overlay" style="justify-content:flex-start; padding-top:40px;">
-        <h3>ประวัติการทำรายการ</h3>
-        <div id="hList" class="history-list"></div>
-        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ปิด</button>
+    <div id="workOverlay" class="overlay">
+        <h3 id="workTitle">ระบบทำงาน</h3>
+        <div id="jobSelection" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <button class="btn-primary" onclick="selectJob('หมอ', 50000)">หมอ 🧑🏻‍⚕️</button>
+            <button class="btn-primary" onclick="selectJob('ช่างแอร์ในตำนาน', 10000)">ช่างแอร์ในตำนาน 🧑🏻‍🔧</button>
+            <button class="btn-primary" onclick="selectJob('ตำรวจ', 15000)">ตำรวจ 👮🏻</button>
+        </div>
+        <div id="workingArea" style="display:none; text-align:center;">
+            <p id="jobDisplay" style="font-weight:bold; color:var(--k-blue);"></p>
+            <button id="mainWorkBtn" class="btn-primary" style="width:120px; height:120px; border-radius:50%; font-size:2rem;" onclick="doWork()">📝</button>
+            <p id="workStatus" style="margin-top:10px;">กดเพื่อทำงาน (0/10)</p>
+            <p id="cooldownText" style="color:var(--k-red); display:none;"></p>
+        </div>
+        <button class="btn-primary" style="background:none; color:#999; margin-top:20px;" onclick="closeOverlays()">ปิด</button>
     </div>
 
     <div id="adminAuthOverlay" class="overlay">
@@ -133,13 +132,8 @@
         <h3>✨ ระบบจัดการแอดมิน</h3>
         <input type="number" id="mTarget" placeholder="เลขบัญชีเป้าหมาย">
         <input type="number" id="mAmt" placeholder="จำนวนเงิน">
-        <div style="width:85%; display:flex; gap:10px;">
-            <button class="btn-primary" style="flex:1;" onclick="processMagic('add')">เสกเงิน</button>
-            <button class="btn-primary" style="flex:1; background:var(--k-red);" onclick="processMagic('reset')">รีเซ็ตเงิน</button>
-        </div>
-        <hr style="width:85%; margin:15px 0; opacity:0.1;">
-        <button class="btn-primary" style="background:#444;" onclick="toggleBan('1233', true)">🔴 ระงับน้อง (1233)</button>
-        <button class="btn-primary" style="background:var(--k-blue);" onclick="toggleBan('1233', false)">🟢 ปลดระงับน้อง (1233)</button>
+        <button class="btn-primary" onclick="processMagic('add')">เสกเงิน</button>
+        <button class="btn-primary" style="background:var(--k-red);" onclick="processMagic('reset')">รีเซ็ตเงิน</button>
         <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">กลับ</button>
     </div>
 
@@ -149,6 +143,20 @@
         <input type="number" id="toAmt" placeholder="0.00">
         <button class="btn-primary" onclick="transfer(document.getElementById('toAcc').value, document.getElementById('toAmt').value)">ยืนยันการโอน</button>
         <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
+    </div>
+    
+    <div id="billOverlay" class="overlay">
+        <h3>เรียกเก็บเงิน</h3>
+        <input type="number" id="billAcc" placeholder="เลขบัญชี">
+        <input type="number" id="billAmt" placeholder="จำนวนเงิน">
+        <button class="btn-primary" onclick="sendBill()">ส่งคำขอ</button>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ยกเลิก</button>
+    </div>
+
+    <div id="historyOverlay" class="overlay" style="justify-content:flex-start; padding-top:40px;">
+        <h3>ประวัติการทำรายการ</h3>
+        <div id="hList" class="history-list"></div>
+        <button class="btn-primary" style="background:none; color:#999;" onclick="closeOverlays()">ปิด</button>
     </div>
 </div>
 
@@ -165,9 +173,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let myAcc = "";
-    let isBanned = false;
-    window.adminTask = "";
+    let myAcc = "", isBanned = false, workCount = 0, myJob = null, mySalary = 0;
 
     function login() {
         const input = document.getElementById('accInput').value;
@@ -175,156 +181,146 @@
             myAcc = input;
             document.getElementById('loginOverlay').style.display = "none";
             document.getElementById('mainScreen').style.display = "block";
-            
             if(myAcc === "1234") {
                 document.getElementById('adminBtn').style.display = "flex";
                 document.getElementById('addAccBtn').style.display = "flex";
                 document.getElementById('headerBg').classList.add('admin-style');
                 document.getElementById('accNameDisp').innerText = "Altimate Black cards";
-                document.getElementById('balDisp').classList.add('gold-text');
             } else {
                 document.getElementById('accNameDisp').innerText = "บัญชี " + myAcc;
             }
-            
-            db.ref('users/'+myAcc+'/balance').once('value', s => {
-                if(s.val() === null) db.ref('users/'+myAcc).update({balance: 0, isBanned: false, isReady: false});
-            });
+            db.ref('users/'+myAcc).update({isReady: false});
             syncData();
         }
     }
 
     function checkAdminPass() {
         if(document.getElementById('adminPass').value === '011010') {
-            if(window.adminTask === 'create') openOverlay('createAccOverlay');
-            else openOverlay('magicOverlay');
+            openOverlay(window.adminTask === 'create' ? 'createAccOverlay' : 'magicOverlay');
             document.getElementById('adminPass').value = '';
-        } else { alert('รหัสผ่านไม่ถูกต้อง'); }
+        } else { alert('รหัสไม่ถูกต้อง'); }
     }
 
     function createNewAccount() {
-        const newAcc = document.getElementById('newAccNum').value;
-        if(newAcc) {
-            db.ref('users/' + newAcc).update({
-                balance: 0,
-                isBanned: false,
-                isReady: false
-            }).then(() => {
-                alert('สร้างบัญชี ' + newAcc + ' สำเร็จ!');
-                closeOverlays();
-                document.getElementById('newAccNum').value = '';
-            });
+        const n = document.getElementById('newAccNum').value;
+        if(n) db.ref('users/'+n).update({balance: 0, isBanned: false, isReady: false}).then(() => { alert('สร้างสำเร็จ'); closeOverlays(); });
+    }
+
+    function openWorkOverlay() {
+        openOverlay('workOverlay');
+        db.ref('users/'+myAcc+'/job').once('value', s => {
+            if(s.exists()) { myJob = s.val().name; mySalary = s.val().salary; showWorkingArea(); }
+            else { document.getElementById('jobSelection').style.display = 'flex'; document.getElementById('workingArea').style.display = 'none'; }
+        });
+    }
+
+    function selectJob(n, s) { db.ref('users/'+myAcc+'/job').set({name:n, salary:s}); myJob=n; mySalary=s; showWorkingArea(); }
+
+    function showWorkingArea() {
+        document.getElementById('jobSelection').style.display = 'none';
+        document.getElementById('workingArea').style.display = 'block';
+        document.getElementById('jobDisplay').innerText = "อาชีพ: " + myJob;
+        checkCooldown();
+    }
+
+    function doWork() {
+        workCount++;
+        document.getElementById('workStatus').innerText = `กดเพื่อทำงาน (${workCount}/10)`;
+        if(workCount >= 10) {
+            workCount = 0;
+            db.ref('users/'+myAcc+'/nextWork').set(Date.now() + 300000);
+            db.ref('logs').push({ from: myAcc, to: '1234', amount: mySalary, job: myJob, time: Date.now(), type: 'salary_req' });
+            alert("กำลังพิจารณาเงินเดือน...");
         }
+    }
+
+    function checkCooldown() {
+        db.ref('users/'+myAcc+'/nextWork').on('value', s => {
+            const next = s.val() || 0;
+            const now = Date.now();
+            const btn = document.getElementById('mainWorkBtn');
+            const txt = document.getElementById('cooldownText');
+            if(now < next) {
+                btn.disabled = true; btn.style.opacity = "0.5"; txt.style.display = "block";
+                txt.innerText = `คูลดาวน์: ${Math.ceil((next-now)/1000)} วิ`;
+            } else { btn.disabled = false; btn.style.opacity = "1"; txt.style.display = "none"; }
+        });
     }
 
     function syncData() {
         db.ref('users/'+myAcc).on('value', s => {
-            const d = s.val() || {};
-            isBanned = d.isBanned || false;
-            document.getElementById('balDisp').innerText = (d.balance || 0).toLocaleString();
+            document.getElementById('balDisp').innerText = (s.val()?.balance || 0).toLocaleString();
+            isBanned = s.val()?.isBanned || false;
             document.getElementById('headerBg').classList.toggle('banned', isBanned);
-            document.getElementById('bannedLabel').style.display = isBanned ? 'block' : 'none';
         });
-
         db.ref('logs').limitToLast(1).on('child_added', snap => {
             const log = snap.val();
-            if(log.to === myAcc && log.time > Date.now() - 5000) {
-                if(log.type === 'bill') {
-                    showToast(`ได้รับคำขอเรียกเก็บเงินจาก: ${log.from}<br>โอนให้: ${log.to}<br>จำนวน: <b>${log.amount} บาท</b>`, true, log);
-                } else {
-                    showToast(`ได้รับเงินจาก: ${log.from}<br>โอนให้: ${log.to}<br>จำนวน: <b>${log.amount} บาท</b>`, false);
+            if(log.time > Date.now() - 5000) {
+                if(myAcc === "1234" && log.type === 'salary_req') showSalaryToast(log, snap.key);
+                else if(log.to === myAcc) {
+                    if(log.type === 'salary_paid') showToast(`เงินเดือนเข้า ${log.amount}`, false);
+                    else if(log.type === 'bill') showToast(`เรียกเก็บจาก ${log.from}: ${log.amount}`, true, log);
+                    else showToast(`ได้รับเงินจาก ${log.from}: ${log.amount}`, false);
                 }
             }
         });
     }
 
-    function startSearch() {
-        openOverlay('scanOverlay');
-        db.ref('users').once('value', (snap) => {
-            const list = document.getElementById('foundList');
-            list.innerHTML = "";
-            snap.forEach(child => {
-                if(child.key !== myAcc && child.val().isReady === true) {
-                    list.innerHTML += `<div class="btn-primary" style="margin-top:20px; text-align:center;" onclick="prepareTransfer('${child.key}')">พบอุปกรณ์ (${child.key})</div>`;
-                }
-            });
-            if(list.innerHTML === "") list.innerHTML = `<p style="text-align:center; color:#999; margin-top:20px;">กำลังค้นหาสัญญาณ...</p>`;
-        });
-    }
-
-    function prepareTransfer(target) {
-        document.getElementById('toAcc').value = target;
-        openOverlay('manualOverlay');
-    }
-
-    function sendBill() {
-        const target = document.getElementById('billAcc').value;
-        const amt = parseFloat(document.getElementById('billAmt').value);
-        if(target && amt > 0) {
-            db.ref('logs').push({ from: myAcc, to: target, amount: amt, time: Date.now(), type: 'bill' });
-            alert("ส่งคำขอแล้ว");
-            closeOverlays();
-        }
+    function showSalaryToast(log, id) {
+        const t = document.getElementById('toast'), p = document.getElementById('payAction');
+        document.getElementById('toast-body').innerHTML = `เงินเดือน (${log.job}) จำนวน ${log.amount}<br>โอนให้บัญชี (${log.from})`;
+        p.style.display = 'block';
+        document.getElementById('btnConfirmPay').innerText = "จ่ายเงิน";
+        document.getElementById('btnConfirmPay').onclick = () => {
+            db.ref('users/'+log.from+'/balance').transaction(c => (c || 0) + log.amount);
+            db.ref('logs').push({ to: log.from, amount: log.amount, time: Date.now(), type: 'salary_paid' });
+            db.ref('logs/'+id).remove(); t.classList.remove('show');
+        };
+        t.classList.add('show');
     }
 
     async function transfer(to, amt) {
-        amt = parseFloat(amt);
-        if(isBanned) return alert("คุณถูกแบน!");
+        amt = parseFloat(amt); if(isBanned) return alert("ถูกแบน");
         const s = await db.ref('users/'+myAcc+'/balance').once('value');
-        const myBal = s.val() || 0;
-        if(myBal >= amt) {
-            db.ref('users/'+myAcc+'/balance').set(myBal - amt);
+        if((s.val()||0) >= amt) {
+            db.ref('users/'+myAcc+'/balance').set(s.val() - amt);
             db.ref('users/'+to+'/balance').transaction(c => (c || 0) + amt);
             db.ref('logs').push({ from: myAcc, to: to, amount: amt, time: Date.now(), type: 'transfer' });
             closeOverlays();
-        } else { alert("เงินไม่พอ!"); }
+        } else alert("เงินไม่พอ");
     }
 
-    function processMagic(mode) {
-        const t = document.getElementById('mTarget').value;
-        const a = parseFloat(document.getElementById('mAmt').value);
-        if(mode === 'add') db.ref('users/'+t+'/balance').transaction(c => (c || 0) + a);
+    function sendBill() {
+        const t = document.getElementById('billAcc').value, a = parseFloat(document.getElementById('billAmt').value);
+        if(t && a) { db.ref('logs').push({ from: myAcc, to: t, amount: a, time: Date.now(), type: 'bill' }); closeOverlays(); }
+    }
+
+    function processMagic(m) {
+        const t = document.getElementById('mTarget').value, a = parseFloat(document.getElementById('mAmt').value);
+        if(m === 'add') db.ref('users/'+t+'/balance').transaction(c => (c || 0) + a);
         else db.ref('users/'+t+'/balance').set(0);
-        alert("ดำเนินการสำเร็จ");
+        alert("สำเร็จ");
     }
 
-    function toggleBan(t, s) { db.ref('users/'+t+'/isBanned').set(s); }
-
-    function openOverlay(id) {
-        closeOverlays();
-        document.getElementById(id).style.display = 'flex';
-        if(id === 'receiveOverlay' && myAcc) db.ref('users/'+myAcc+'/isReady').set(true);
-    }
-
-    function closeOverlays() {
-        document.querySelectorAll('.overlay').forEach(e => e.style.display = 'none');
-        if(myAcc) db.ref('users/'+myAcc+'/isReady').set(false);
-    }
-
-    function showToast(msg, isBill, logData) {
-        const t = document.getElementById('toast');
-        const b = document.getElementById('toast-body');
-        const p = document.getElementById('payAction');
-        b.innerHTML = msg;
-        if(isBill) {
-            p.style.display = 'block';
-            document.getElementById('btnConfirmPay').onclick = () => { transfer(logData.from, logData.amount); t.classList.remove('show'); };
-        } else { p.style.display = 'none'; }
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 8000);
+    function openOverlay(id) { closeOverlays(); document.getElementById(id).style.display = 'flex'; if(id === 'receiveOverlay') db.ref('users/'+myAcc+'/isReady').set(true); }
+    function closeOverlays() { document.querySelectorAll('.overlay').forEach(e => e.style.display = 'none'); if(myAcc) db.ref('users/'+myAcc+'/isReady').set(false); }
+    function showToast(m, b, l) {
+        const t = document.getElementById('toast'), p = document.getElementById('payAction');
+        document.getElementById('toast-body').innerHTML = m;
+        if(b) { p.style.display='block'; document.getElementById('btnConfirmPay').innerText="จ่ายเงิน"; document.getElementById('btnConfirmPay').onclick=()=>{transfer(l.from, l.amount); t.classList.remove('show');}; }
+        else p.style.display='none';
+        t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 8000);
     }
 
     function loadHistory() {
-        const l = document.getElementById('hList');
-        l.innerHTML = "กำลังโหลด...";
+        const l = document.getElementById('hList'); l.innerHTML = "โหลด...";
         db.ref('logs').limitToLast(10).once('value', s => {
             l.innerHTML = "";
-            const data = s.val();
-            if(!data) return l.innerHTML = "ไม่มีประวัติ";
-            Object.values(data).reverse().forEach(v => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.innerHTML = `[${v.type === 'bill' ? 'เรียกเก็บ' : 'โอน'}] จาก: ${v.from} ➡️ ถึง: ${v.to}<br><b>จำนวน: ${v.amount} บาท</b>`;
-                l.appendChild(item);
+            if(!s.val()) return l.innerHTML = "ไม่มีประวัติ";
+            Object.values(s.val()).reverse().forEach(v => {
+                const i = document.createElement('div'); i.className = 'history-item';
+                i.innerHTML = `[${v.type}] ${v.from} ➡️ ${v.to}<br><b>${v.amount} บาท</b>`;
+                l.appendChild(i);
             });
         });
     }
